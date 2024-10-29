@@ -8,8 +8,4 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM PaymentEntity p WHERE p.paymentId = :paymentId")
-    PaymentEntity findByIdForUpdate(Long paymentId);
-
 }
