@@ -16,12 +16,12 @@ public class PaymentServicePerformanceOptimisticLockTest {
     @Autowired
     private PaymentService paymentService;
 
-    private static final int THREAD_COUNT = 50; // 동시 요청 수
+    private static final int THREAD_COUNT = 50;
     private Long userId = 1L;
     private Long concertId = 1L;
     private Long seatId = 1L;
-    private int amount = 100;
     private String token = "token123";
+    private int amount = 100;
 
     @Test
     @Transactional
@@ -43,7 +43,7 @@ public class PaymentServicePerformanceOptimisticLockTest {
             });
         }
 
-        latch.await(); // 모든 스레드가 종료될 때까지 대기
+        latch.await();
         long end = System.currentTimeMillis();
 
         System.out.println("낙관적 락 테스트 완료 시간: " + (end - start) + " ms");
