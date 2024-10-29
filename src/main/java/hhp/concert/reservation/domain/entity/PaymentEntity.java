@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 @Table(name = "payment")
 public class PaymentEntity {
 
+    @Version
+    private int version;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
