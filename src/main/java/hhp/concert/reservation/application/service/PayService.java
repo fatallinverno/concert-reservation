@@ -20,10 +20,10 @@ public class PayService {
 
     @Transactional
     public UserEntity chargePay(Long userId, int amount) {
-        UserEntity user = userRepository.findByIdWithPessimisticLock(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-//        UserEntity user = userRepository.findById(userId)
+//        UserEntity user = userRepository.findByIdWithPessimisticLock(userId)
 //                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
         user.setPay(user.getPay() + amount);
         return userRepository.save(user);
