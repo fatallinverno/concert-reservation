@@ -12,8 +12,8 @@ import java.util.List;
 @Table(name = "userInfo")
 public class UserEntity {
 
-    @Version
-    private int version;
+//    @Version
+//    private int version;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
