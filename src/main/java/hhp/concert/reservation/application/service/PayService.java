@@ -4,6 +4,7 @@ import hhp.concert.reservation.domain.entity.UserEntity;
 import hhp.concert.reservation.infrastructure.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PayService {
@@ -17,6 +18,7 @@ public class PayService {
         return user.getPay();
     }
 
+    @Transactional
     public UserEntity chargePay(Long userId, int amount) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
