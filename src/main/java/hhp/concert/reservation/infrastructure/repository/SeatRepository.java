@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface SeatRepository extends JpaRepository<SeatEntity, Long> {
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+//    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM SeatEntity s WHERE s.seatId = :seatId")
     Optional<SeatEntity> findByIdForReservation(Long seatId);
 }
