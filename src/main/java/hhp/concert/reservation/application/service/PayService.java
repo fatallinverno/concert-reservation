@@ -5,7 +5,6 @@ import hhp.concert.reservation.infrastructure.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +35,7 @@ public class PayService {
                 throw new RuntimeException("락 획득에 실패했습니다.");
             }
 
-            chargePay(userId, amount);
+            return chargePay(userId, amount);
 
         } catch (InterruptedException e) {
             throw new RuntimeException("Redis 락 사용 중 예외 발생", e);
@@ -44,7 +43,6 @@ public class PayService {
             lock.unlock();
         }
 
-        return null;
     }
 
     @Transactional
@@ -54,6 +52,10 @@ public class PayService {
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 //            UserEntity user = userRepository.findByIdWithPessimisticLock(userId)
 //                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (user.getPay() > 0) {
+            throw new RuntimeException("이미 충전이 완료된 사용자입니다.");
+        }
 
         user.setPay(user.getPay() + amount);
         return userRepository.save(user);
