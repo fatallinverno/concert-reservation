@@ -10,9 +10,6 @@ import lombok.Setter;
 @Table(name = "seat")
 public class SeatEntity {
 
-    @Version
-    private int version;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long seatId;

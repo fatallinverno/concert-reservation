@@ -2,11 +2,14 @@ package hhp.concert.reservation.application.service;
 
 import hhp.concert.reservation.domain.entity.*;
 import hhp.concert.reservation.infrastructure.repository.*;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class PaymentService {
@@ -31,6 +34,31 @@ public class PaymentService {
 
     @Autowired
     private ConcertRepository concertRepository;
+
+    @Autowired
+    private RedissonClient redissonClient;
+
+    public PaymentEntity redisProcessPayment(Long userId, Long concertId, Long seatId, int amount, String token) {
+
+        RLock lock = redissonClient.getLock("user:" + userId);
+
+        try {
+
+            boolean isLocked = lock.tryLock(1, 3, TimeUnit.SECONDS);
+            if (!isLocked) {
+                throw new RuntimeException("락 획득에 실패했습니다.");
+            }
+
+            processPayment(userId, concertId, seatId, amount, token);
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Redis 락 사용 중 예외 발생", e);
+        } finally {
+            lock.unlock();
+        }
+
+        return null;
+    }
 
     public PaymentEntity processPayment(Long userId, Long concertId, Long seatId, int amount, String token) {
         UserEntity user = userRepository.findById(userId)

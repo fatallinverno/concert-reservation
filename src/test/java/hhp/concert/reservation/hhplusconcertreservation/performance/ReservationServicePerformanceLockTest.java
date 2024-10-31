@@ -1,25 +1,27 @@
 package hhp.concert.reservation.hhplusconcertreservation.performance;
 
-import hhp.concert.reservation.application.service.PayService;
+import hhp.concert.reservation.application.service.ReservationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @SpringBootTest
-public class PayChargeServicePerformanceLockTest {
+public class ReservationServicePerformanceLockTest {
 
     @Autowired
-    private PayService payService;
+    private ReservationService reservationService;
 
-    private static final int THREAD_COUNT = 10;
-    private final int amount = 5000;
+    private static final int THREAD_COUNT = 50;
+    private Long seatId = 1L;
 
     @Test
-    public void testChargePayWithOptimisticLock() throws InterruptedException {
+    @Transactional
+    public void testConcurrentSeatReservationWithOptimisticLock() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 
@@ -29,9 +31,9 @@ public class PayChargeServicePerformanceLockTest {
             final Long threadUserId = (long) (i + 1);
             executor.submit(() -> {
                 try {
-                    payService.chargePay(threadUserId, amount);
+                    reservationService.reserveSeat(threadUserId, seatId);
                 } catch (Exception e) {
-                    System.out.println("낙관적 락 실패: " + e.getMessage());
+                    System.out.println("예약 실패: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -40,12 +42,14 @@ public class PayChargeServicePerformanceLockTest {
 
         latch.await();
         long end = System.currentTimeMillis();
+
         System.out.println("낙관적 락 테스트 완료 시간: " + (end - start) + " ms");
         executor.shutdown();
     }
 
     @Test
-    public void testChargePayWithPessimisticLock() throws InterruptedException {
+    @Transactional
+    public void testConcurrentSeatReservationWithPessimisticLock() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 
@@ -55,9 +59,9 @@ public class PayChargeServicePerformanceLockTest {
             final Long threadUserId = (long) (i + 1);
             executor.submit(() -> {
                 try {
-                    payService.chargePay(threadUserId, amount);
+                    reservationService.reserveSeat(threadUserId, seatId);
                 } catch (Exception e) {
-                    System.out.println("비관적 락 실패: " + e.getMessage());
+                    System.out.println("예약 실패: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -66,12 +70,13 @@ public class PayChargeServicePerformanceLockTest {
 
         latch.await();
         long end = System.currentTimeMillis();
+
         System.out.println("비관적 락 테스트 완료 시간: " + (end - start) + " ms");
         executor.shutdown();
     }
 
     @Test
-    public void testChargePayWithRedisLock() throws InterruptedException {
+    public void testRedisReserveSeatPerformance() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 
@@ -81,9 +86,9 @@ public class PayChargeServicePerformanceLockTest {
             final Long threadUserId = (long) (i + 1);
             executor.submit(() -> {
                 try {
-                    payService.redisChargePay(threadUserId, amount);
+                    reservationService.redisReserveSeat(threadUserId, seatId);
                 } catch (Exception e) {
-                    System.out.println("Redis 락 실패: " + e.getMessage());
+                    System.out.println("Redis 락 예약 실패: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -92,7 +97,8 @@ public class PayChargeServicePerformanceLockTest {
 
         latch.await();
         long end = System.currentTimeMillis();
-        System.out.println("Redis 락 테스트 완료 시간: " + (end - start) + " ms");
+
+        System.out.println("Redis 락 성능 테스트 완료 시간: " + (end - start) + " ms");
         executor.shutdown();
     }
 

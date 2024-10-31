@@ -27,7 +27,7 @@ public class ReservationContoller {
     public ReservationEntity reserveSeat(@RequestParam Long userId, @RequestParam Long seatId, @RequestParam String token) {
         tokenValidate.validateToken(token, userId);
 
-        return reservationService.reserveSeat(userId, seatId);
+        return reservationService.redisReserveSeat(userId, seatId);
     }
 
 }

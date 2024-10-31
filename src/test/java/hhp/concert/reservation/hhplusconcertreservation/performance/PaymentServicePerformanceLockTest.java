@@ -1,37 +1,42 @@
 package hhp.concert.reservation.hhplusconcertreservation.performance;
 
-import hhp.concert.reservation.application.service.PayService;
+import hhp.concert.reservation.application.service.PaymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @SpringBootTest
-public class PayChargeServicePerformanceLockTest {
+public class PaymentServicePerformanceLockTest {
 
     @Autowired
-    private PayService payService;
+    private PaymentService paymentService;
 
-    private static final int THREAD_COUNT = 10;
-    private final int amount = 5000;
+    private static final int THREAD_COUNT = 50;
+    private Long userId = 1L;
+    private Long concertId = 1L;
+    private Long seatId = 1L;
+    private String token = "token123";
+    private int amount = 100;
 
     @Test
-    public void testChargePayWithOptimisticLock() throws InterruptedException {
+    @Transactional
+    public void testConcurrentPaymentsWithOptimisticLock() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 
         long start = System.currentTimeMillis();
 
         for (int i = 0; i < THREAD_COUNT; i++) {
-            final Long threadUserId = (long) (i + 1);
             executor.submit(() -> {
                 try {
-                    payService.chargePay(threadUserId, amount);
+                    paymentService.processPayment(userId, concertId, seatId, amount, token);
                 } catch (Exception e) {
-                    System.out.println("낙관적 락 실패: " + e.getMessage());
+                    System.out.println("결제 실패: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -40,24 +45,25 @@ public class PayChargeServicePerformanceLockTest {
 
         latch.await();
         long end = System.currentTimeMillis();
+
         System.out.println("낙관적 락 테스트 완료 시간: " + (end - start) + " ms");
         executor.shutdown();
     }
 
     @Test
-    public void testChargePayWithPessimisticLock() throws InterruptedException {
+    @Transactional
+    public void testConcurrentPaymentsWithPessimisticLock() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 
         long start = System.currentTimeMillis();
 
         for (int i = 0; i < THREAD_COUNT; i++) {
-            final Long threadUserId = (long) (i + 1);
             executor.submit(() -> {
                 try {
-                    payService.chargePay(threadUserId, amount);
+                    paymentService.processPayment(userId, concertId, seatId, amount, token);
                 } catch (Exception e) {
-                    System.out.println("비관적 락 실패: " + e.getMessage());
+                    System.out.println("결제 실패: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -66,24 +72,27 @@ public class PayChargeServicePerformanceLockTest {
 
         latch.await();
         long end = System.currentTimeMillis();
+
         System.out.println("비관적 락 테스트 완료 시간: " + (end - start) + " ms");
         executor.shutdown();
     }
 
     @Test
-    public void testChargePayWithRedisLock() throws InterruptedException {
+    public void testRedisProcessPaymentPerformance() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 
         long start = System.currentTimeMillis();
 
         for (int i = 0; i < THREAD_COUNT; i++) {
-            final Long threadUserId = (long) (i + 1);
+            final Long threadUserId = (long) (i + 1); // 각 스레드마다 다른 사용자 ID로 설정
+            final String token = "token" + i;         // 각 스레드마다 다른 토큰으로 설정
+
             executor.submit(() -> {
                 try {
-                    payService.redisChargePay(threadUserId, amount);
+                    paymentService.redisProcessPayment(threadUserId, concertId, seatId, amount, token);
                 } catch (Exception e) {
-                    System.out.println("Redis 락 실패: " + e.getMessage());
+                    System.out.println("Redis 락 결제 실패: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -92,7 +101,8 @@ public class PayChargeServicePerformanceLockTest {
 
         latch.await();
         long end = System.currentTimeMillis();
-        System.out.println("Redis 락 테스트 완료 시간: " + (end - start) + " ms");
+
+        System.out.println("Redis 락 결제 성능 테스트 완료 시간: " + (end - start) + " ms");
         executor.shutdown();
     }
 
