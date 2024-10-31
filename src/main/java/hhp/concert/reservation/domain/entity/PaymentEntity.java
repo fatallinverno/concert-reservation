@@ -17,33 +17,33 @@ public class PaymentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
 
-    @Column
+    @Column(nullable = false)
     private int amount;
 
-    @Column
+    @Column(nullable = false)
     private LocalDateTime paymentTime;
 
-    @ManyToOne
-    @JoinColumn(name = "user_Id", referencedColumnName = "userId")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_Id", referencedColumnName = "userId", nullable = false)
     private UserEntity userEntity;
 
-    @ManyToOne
-    @JoinColumn(name = "concert_Id", referencedColumnName = "concertId")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "concert_Id", referencedColumnName = "concertId", nullable = false)
     private ConcertEntity concertEntity;
 
     @ManyToOne
     @JoinColumn(name = "reservation_Id", referencedColumnName = "reservationId")
     private ReservationEntity reservationEntity;
 
-    @ManyToOne
-    @JoinColumn(name = "seat_id", referencedColumnName = "seatId")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "seat_id", referencedColumnName = "seatId", nullable = false)
     private SeatEntity seat;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private PaymentStatus paymentStatus;
 
     public enum PaymentStatus {
         PENDING, COMPLETED, FAILED
     }
-
 }

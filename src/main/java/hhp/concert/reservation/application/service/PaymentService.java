@@ -6,6 +6,9 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -40,7 +43,8 @@ public class PaymentService {
 
     public PaymentEntity redisProcessPayment(Long userId, Long concertId, Long seatId, int amount, String token) {
 
-        RLock lock = redissonClient.getLock("user:" + userId);
+        String lockKey = "user:payment:" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
 
         try {
 
@@ -49,7 +53,11 @@ public class PaymentService {
                 throw new RuntimeException("락 획득에 실패했습니다.");
             }
 
-            processPayment(userId, concertId, seatId, amount, token);
+            if (paymentRepository.existsByUserEntity_UserIdAndPaymentStatus(userId, PaymentEntity.PaymentStatus.COMPLETED)) {
+                throw new RuntimeException("이미 결제가 완료된 사용자입니다.");
+            }
+
+            return processPayment(userId, concertId, seatId, amount, token);
 
         } catch (InterruptedException e) {
             throw new RuntimeException("Redis 락 사용 중 예외 발생", e);
@@ -57,10 +65,15 @@ public class PaymentService {
             lock.unlock();
         }
 
-        return null;
     }
 
+    @Transactional
     public PaymentEntity processPayment(Long userId, Long concertId, Long seatId, int amount, String token) {
+
+        if (paymentRepository.existsByUserEntity_UserIdAndPaymentStatus(userId, PaymentEntity.PaymentStatus.COMPLETED)) {
+            throw new RuntimeException("이미 결제가 완료된 사용자입니다.");
+        }
+
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         ConcertEntity concert = concertRepository.findById(concertId)
@@ -76,18 +89,19 @@ public class PaymentService {
         payment.setPaymentTime(LocalDateTime.now());
         payment.setPaymentStatus(PaymentEntity.PaymentStatus.COMPLETED);
 
-        paymentRepository.save(payment);
+        payment = paymentRepository.save(payment);
 
-        // 좌석을 사용 불가 상태로 설정
+        if (!paymentRepository.existsById(payment.getPaymentId())) {
+            throw new RuntimeException("결제 내역이 데이터베이스에 저장되지 않았습니다.");
+        }
+
         seat.setAvailable(false);
         seatRepository.save(seat);
 
-        // 토큰을 "Complete" 상태로 변경
         TokenEntity tokenEntity = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new RuntimeException("유효하지 않은 토큰입니다."));
         tokenService.completeToken(tokenEntity.getTokenId());
 
-        // 임시 예약 해제
         Optional<ReservationEntity> tempReservationOpt = reservationRepository
                 .findByUserEntityAndConcertEntityAndSeatEntityAndIsTemporary(user, concert, seat, true);
 
