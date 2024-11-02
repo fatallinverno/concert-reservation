@@ -23,4 +23,10 @@ public class SeatEntity {
     @Column
     private boolean isAvailable;
 
+    public SeatEntity(Long l, boolean b) {
+    }
+
+    public SeatEntity() {
+
+    }
 }

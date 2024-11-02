@@ -1,22 +1,22 @@
-INSERT INTO concert (concert_name, concert_date) VALUES ('LKR', '2024-10-20');
-INSERT INTO concert (concert_name, concert_date) VALUES ('LEEKR', '2024-10-21');
+INSERT INTO concert (concert_name, concert_date) VALUES ('LKR', '2024-10-30');
+INSERT INTO concert (concert_name, concert_date) VALUES ('LEEKR', '2024-10-31');
 
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (1, 1, true);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (2, 1, true);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (3, 1, true);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (4, 1, false);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (5, 1, false);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (6, 1, true);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (7, 1, true);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (8, 1, true);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (9, 1, false);
-INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (10, 1, false);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (1, 1, true);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (2, 1, true);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (3, 1, true);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (4, 1, false);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (5, 1, false);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (6, 1, true);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (7, 1, true);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (8, 1, true);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (9, 1, false);
+-- INSERT INTO seat (seat_Number, reservation_Id, is_Available) VALUES (10, 1, false);
 
 
-/*INSERT INTO RESERVE (IS_TEMPORARY, RESERVATION_DATE, CONCERT_ID, EXPORATION_TIME, RESERVATION_ID, SEAT_ID, USER_ID) VALUES (TRUE, '2024-10-20', 1, '2024-10-20', 1, 1, 1)*/
+-- INSERT INTO RESERVE (IS_TEMPORARY, RESERVATION_DATE, CONCERT_ID, EXPORATION_TIME, RESERVATION_ID, SEAT_ID, USER_ID) VALUES (TRUE, '2024-10-27', 1, '2024-10-27', 1, 1, 1)
 
-INSERT INTO user_info (pay, user_name) VALUES (5000, 'user1');
 INSERT INTO user_info (pay, user_name) VALUES (15000, 'user2');
+INSERT INTO user_info (pay, user_name) VALUES (5000, 'user1');
 INSERT INTO user_info (pay, user_name) VALUES (15000, 'user3');
 INSERT INTO user_info (pay, user_name) VALUES (15000, 'user4');
 INSERT INTO user_info (pay, user_name) VALUES (15000, 'user5');

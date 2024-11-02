@@ -22,4 +22,10 @@ public class UserEntity {
     @Column(nullable = false)
     private int pay;
 
+    public UserEntity(Long l, String testUser) {
+    }
+
+    public UserEntity() {
+
+    }
 }

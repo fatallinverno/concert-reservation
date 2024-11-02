@@ -28,9 +28,6 @@ public class PaymentServiceIntegrationTest {
     private SeatRepository seatRepository;
 
     @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
     private TokenRepository tokenRepository;
 
     @Autowired

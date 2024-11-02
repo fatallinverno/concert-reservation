@@ -47,12 +47,14 @@ public class TokenService {
         token.setExpirationTime(LocalDateTime.now().plusMinutes(5));
         token.setStatus("pending");
 
-        waitingQueue.add(token);
+//        waitingQueue.add(token);
+//
+//        int queuePosition = waitingQueue.size();
+//        token.setQueuePosition(queuePosition);
+//
+//        tokenRepository.save(token);
 
-        int queuePosition = waitingQueue.size();
-        token.setQueuePosition(queuePosition);
-
-        tokenRepository.save(token);
+        addToken(token);
 
         if (readyQueue.size() < MAX_READY_QUEUE_SIZE) {
             moveToReadyQueue();
@@ -112,5 +114,11 @@ public class TokenService {
     public int getWaitingQueueSize() {
         return waitingQueue.size();
     }
+
+    public void addToken(TokenEntity token) {
+        waitingQueue.add(token);
+        tokenRepository.save(token);
+    }
+
 
 }
