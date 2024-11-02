@@ -34,7 +34,7 @@ public class PayController {
     public UserEntity chargePay(@PathVariable Long userId, @RequestParam int amount, @RequestParam String token) {
         tokenValidate.validateToken(token, userId);
 
-        return payService.chargePay(userId, amount);
+        return payService.redisChargePay(userId, amount);
     }
 
 }
