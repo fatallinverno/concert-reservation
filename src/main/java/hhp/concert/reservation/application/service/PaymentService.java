@@ -81,6 +81,9 @@ public class PaymentService {
         SeatEntity seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new RuntimeException("좌석을 찾을 수 없습니다."));
 
+        user.subtractPay(amount);
+        userRepository.save(user);
+
         PaymentEntity payment = new PaymentEntity();
         payment.setUserEntity(user);
         payment.setConcertEntity(concert);
