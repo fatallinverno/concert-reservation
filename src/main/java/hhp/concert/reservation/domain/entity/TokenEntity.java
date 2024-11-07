@@ -29,10 +29,13 @@ public class TokenEntity {
     @JoinColumn(name = "user_id", referencedColumnName = "userId")
     private UserEntity userEntity;
 
+    @Column
     private int queuePosition;
 
+    @Column
     private LocalDateTime issuedAt;
 
+    @Column
     private LocalDateTime expirationTime;
 
 }
