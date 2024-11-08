@@ -51,8 +51,7 @@ public class SeatReservationIntegrationTest {
     private Long concertId;
 
     @BeforeEach
-    public void setUp() {
-
+    void setUp() {
         UserEntity user = new UserEntity();
         user.setUserId(1L);
         userRepository.save(user);

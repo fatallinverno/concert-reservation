@@ -3,19 +3,18 @@ package hhp.concert.reservation.hhplusconcertreservation.integration;
 import hhp.concert.reservation.application.service.PaymentService;
 import hhp.concert.reservation.domain.entity.*;
 import hhp.concert.reservation.infrastructure.repository.*;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@Transactional
 public class PaymentServiceIntegrationTest {
 
     @Autowired
@@ -25,75 +24,74 @@ public class PaymentServiceIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private ConcertRepository concertRepository;
+
+    @Autowired
     private SeatRepository seatRepository;
 
     @Autowired
-    private TokenRepository tokenRepository;
+    private PaymentRepository paymentRepository;
 
-    @Autowired
-    private ReservationRepository reservationRepository;
-
-    @Autowired
-    private ConcertRepository concertRepository;
+    private static final int THREAD_COUNT = 5; // 단일 스레드로 설정
+    private static final int CHARGE_AMOUNT = 10000; // 결제 금액
 
     @Test
-    @DisplayName("결제 처리 후 결제 내역 생성 및 토큰 만료 - 통합 테스트")
-    void testProcessPaymentIntegration() {
-        Long userId = 1L;
-        Long concertId = 1L;
-        Long seatId = 1L;
-        int amount = 1000;
-        String token = "TokenTest";
+    public void testRedisProcessPayment() throws InterruptedException {
 
-        // 데이터 준비: 사용자, 콘서트, 좌석, 토큰, 임시 예약
         UserEntity user = new UserEntity();
         user.setUserName("testUser");
-        user = userRepository.save(user);
+        user = userRepository.saveAndFlush(user);
 
         ConcertEntity concert = new ConcertEntity();
         concert.setConcertName("testConcert");
-        concert = concertRepository.save(concert);
+        concert = concertRepository.saveAndFlush(concert);
 
         SeatEntity seat = new SeatEntity();
-        seat.setSeatNumber(10);
+        seat.setSeatNumber(1);
         seat.setAvailable(true);
-        seat = seatRepository.save(seat);
+        seat = seatRepository.saveAndFlush(seat);
 
-        TokenEntity tokenEntity = new TokenEntity();
-        tokenEntity.setToken(token);
-        tokenEntity.setUserEntity(user);
-        tokenEntity.setStatus("pending");
-        tokenEntity = tokenRepository.save(tokenEntity);
+        Long userId = user.getUserId();
+        Long concertId = concert.getConcertId();
+        Long seatId = seat.getSeatId();
+        String token = "testToken";
 
-        ReservationEntity reservation = new ReservationEntity();
-        reservation.setUserEntity(user);
-        reservation.setSeatEntity(seat);
-        reservation.setConcertEntity(concert);
-        reservation.setTemporary(true);
-        reservation.setExpirationTime(LocalDateTime.now().minusMinutes(1));
-        reservation = reservationRepository.save(reservation);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
 
-        // 통합 테스트 - 실제 서비스 호출
-        PaymentEntity payment = paymentService.processPayment(user.getUserId(), concert.getConcertId(), seat.getSeatId(), amount, token);
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+        long start = System.currentTimeMillis();
 
-        // 검증
-        assertNotNull(payment.getPaymentId(), "결제 내역이 저장되지 않았습니다.");
-        assertEquals(amount, payment.getAmount(), "결제 금액이 일치하지 않습니다.");
-        assertEquals(user, payment.getUserEntity(), "사용자가 일치하지 않습니다.");
-        assertEquals(seat, payment.getSeat(), "좌석이 일치하지 않습니다.");
-        assertEquals(PaymentEntity.PaymentStatus.COMPLETED, payment.getPaymentStatus(), "결제 상태가 일치하지 않습니다.");
+        for (int i = 0; i < THREAD_COUNT; i++) {
+            executor.submit(() -> {
+                try {
+                    PaymentEntity payment = paymentService.redisProcessPayment(userId, concertId, seatId, CHARGE_AMOUNT, token);
+                    successCount.incrementAndGet();
+                    System.out.println("결제 성공: paymentId=" + payment.getPaymentId());
+                } catch (Exception e) {
+                    System.out.println("Redis 락 결제 실패: " + e.getMessage());
+                    failCount.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
 
-        // 좌석이 비활성화 상태로 변경되었는지 확인
-        SeatEntity savedSeat = seatRepository.findById(seat.getSeatId()).orElseThrow();
-        assertFalse(savedSeat.isAvailable(), "좌석이 예약 상태로 변경되지 않았습니다.");
+        latch.await();
+        long end = System.currentTimeMillis();
+        System.out.println("Redis 결제 성능 테스트 완료 시간: " + (end - start) + " ms");
+        executor.shutdown();
 
-        // 토큰이 완료 상태로 변경되었는지 확인
-        TokenEntity savedToken = tokenRepository.findById(tokenEntity.getTokenId()).orElseThrow();
-        assertEquals("complete", savedToken.getStatus(), "토큰이 완료 상태로 변경되지 않았습니다.");
+        System.out.println("성공 횟수: " + successCount.get() + ", 실패 횟수: " + failCount.get());
 
-        // 임시 예약이 해제되었는지 확인
-        Optional<ReservationEntity> optionalReservation = reservationRepository.findById(reservation.getReservationId());
-        assertFalse(optionalReservation.isPresent(), "임시 예약이 해제되지 않았습니다.");
+        // 결제 내역 검증
+        PaymentEntity payment = paymentRepository.findTopByUserEntity_UserIdOrderByPaymentTimeDesc(userId)
+                .orElseThrow(() -> new RuntimeException("결제 내역을 찾을 수 없습니다."));
+        assertNotNull(payment, "결제 내역이 저장되지 않았습니다.");
+        assertEquals(PaymentEntity.PaymentStatus.COMPLETED, payment.getPaymentStatus(), "최종 결제 상태가 예상과 다릅니다.");
+        assertEquals(1, successCount.get(), "결제 성공 횟수가 1이 아닙니다.");
+        assertEquals(THREAD_COUNT - 1, failCount.get(), "결제 실패 횟수가 예상과 일치하지 않습니다.");
     }
 
 }

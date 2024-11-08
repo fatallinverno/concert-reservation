@@ -4,7 +4,6 @@ import hhp.concert.reservation.domain.entity.SeatEntity;
 import hhp.concert.reservation.infrastructure.repository.ConcertRepository;
 import hhp.concert.reservation.infrastructure.repository.SeatRepository;
 import hhp.concert.reservation.validate.ConcertValidate;
-import hhp.concert.reservation.validate.TokenValidate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +23,6 @@ public class ConcertService {
 
     @Autowired
     private ConcertValidate concertValidate;
-
-    @Autowired
-    private TokenValidate tokenValidate;
 
     public List<LocalDate> findAvailableDatesByConcert(Long concertId) {
         boolean exists = concertRepository.existsById(concertId);

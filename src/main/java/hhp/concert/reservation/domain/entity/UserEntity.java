@@ -25,10 +25,18 @@ public class UserEntity {
     @Column(nullable = false)
     private int pay;
 
-    public UserEntity(Long l, String testUser) {
+//    public UserEntity(Long l, String testUser) {
+//    }
+//
+//    public UserEntity() {
+//
+//    }
+
+    public void subtractPay(int amount) {
+        if (this.pay < amount) {
+            throw new RuntimeException("잔액이 부족합니다.");
+        }
+        this.pay -= amount;
     }
 
-    public UserEntity() {
-
-    }
 }
