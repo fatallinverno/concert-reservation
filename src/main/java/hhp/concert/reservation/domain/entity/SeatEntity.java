@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Data
 @Entity
 @Table(name = "seat")
@@ -23,7 +25,16 @@ public class SeatEntity {
     @Column
     private boolean isAvailable;
 
+    @Column(nullable = false)
+    private LocalDate concertDate;
+
+    @ManyToOne
+    @JoinColumn(name = "concert_id", referencedColumnName = "concertId", nullable = false)
+    private ConcertEntity concertEntity;
+
     public SeatEntity(Long l, boolean b) {
+        this.seatId = l;
+        this.isAvailable = b;
     }
 
     public SeatEntity() {
