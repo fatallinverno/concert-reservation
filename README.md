@@ -1,3 +1,3 @@
-DB Index 전후 성능 테스트
+트랜젝션 분리, ApplicationEvent 작성하여 통합테스트 진행.
 
-https://velog.io/@linverno/%EC%A1%B0%ED%9A%8C-%EC%9D%B8%EB%8D%B1%EC%8A%A4-%EC%83%9D%EC%84%B1-%EC%A0%84%ED%9B%84-%EC%84%B1%EB%8A%A5-%ED%85%8C%EC%8A%A4%ED%8A%B8
+https://velog.io/@linverno/%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98-%EC%B2%98%EB%A6%AC%EC%9D%98-%ED%95%9C%EA%B3%84%EC%99%80-%ED%95%B4%EA%B2%B0%EB%B0%A9%EC%95%88
