@@ -1,6 +1,5 @@
 package hhp.concert.reservation.util;
 
-import hhp.concert.reservation.application.service.TokenService;
 import hhp.concert.reservation.domain.entity.TokenEntity;
 import hhp.concert.reservation.infrastructure.repository.TokenRepository;
 import io.jsonwebtoken.*;
@@ -12,7 +11,6 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Component
 public class JwtUtil {
