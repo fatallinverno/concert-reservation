@@ -27,4 +27,7 @@ public class ConcertEntity {
     @OneToMany
     private List<ReservationEntity> reservations;
 
+    @OneToMany(mappedBy = "concertEntity", cascade = CascadeType.ALL)
+    private List<SeatEntity> seats;
+
 }
