@@ -20,6 +20,16 @@ spring:
 #      schema-locations: classpath:sql/schema.sql
       data-locations: classpath:sql/data.sql
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: foo
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 # Swagger springdoc-ui Configuration
 springdoc:
