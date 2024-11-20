@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class KafkaIntegrationTest {
 
     private static final String TOPIC = "test-topic";
-    private static final String BROKER = "127.0.0.1:9092"; // Docker Kafka 브로커 주소
+    private static final String BROKER = "127.0.0.1:9092";
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
