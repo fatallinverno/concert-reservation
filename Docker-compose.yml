@@ -1,17 +1,18 @@
-version: '3.8'
 services:
   redis:
     image: redis:latest
     container_name: redis
     ports:
       - "6379:6379"
+
   zookeeper:
-    image: wurstmeister/zookeeper:latest
+    image: wurstmeister/zookeeper
     container_name: zookeeper
     ports:
       - "2181:2181"
+
   kafka:
-    image: wurstmeister/kafka:latest
+    image: wurstmeister/kafka:2.12-2.5.0
     container_name: kafka
     ports:
       - "9092:9092"
@@ -20,29 +21,3 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-  producer:
-    image: confluentinc/cp-kafka:latest
-    container_name: kafka-producer
-    depends_on:
-      - kafka
-    entrypoint: >
-      /bin/bash -c "
-      echo 'Producing messages to Kafka topic...';
-      echo -e 'Hello, Kafka from Docker!' | kafka-console-producer --broker-list kafka:9092 --topic test-topic;
-      sleep infinity
-      "
-    environment:
-      KAFKA_BROKER: kafka:9092
-  consumer:
-    image: confluentinc/cp-kafka:latest
-    container_name: kafka-consumer
-    depends_on:
-      - kafka
-    entrypoint: >
-      /bin/bash -c "
-      echo 'Consuming messages from Kafka topic...';
-      kafka-console-consumer --bootstrap-server kafka:9092 --topic test-topic --from-beginning;
-      sleep infinity
-      "
-    environment:
-      KAFKA_BROKER: kafka:9092
