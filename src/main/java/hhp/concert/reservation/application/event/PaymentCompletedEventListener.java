@@ -3,9 +3,9 @@ package hhp.concert.reservation.application.event;
 import hhp.concert.reservation.domain.entity.PaymentEntity;
 import hhp.concert.reservation.infrastructure.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 public class PaymentCompletedEventListener {
@@ -15,10 +15,12 @@ public class PaymentCompletedEventListener {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    @Async
-    @EventListener // @Async 제거
+//    @Async // 즉각성이 필요 없을때?
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePaymentCompletedEvent(PaymentCompletedEvent event) {
         System.out.println("동기 이벤트 수신: Payment ID = " + event.getPaymentId());
+
+        System.out.println("리스너 스레드 : " + Thread.currentThread().getName());
 
         Long paymentId = event.getPaymentId();
         PaymentEntity payment = paymentRepository.findById(paymentId)

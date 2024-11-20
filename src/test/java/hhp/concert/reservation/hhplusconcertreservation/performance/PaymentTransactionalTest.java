@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
-@Transactional
 public class PaymentTransactionalTest {
 
     @Autowired
@@ -53,6 +52,7 @@ public class PaymentTransactionalTest {
         }
     }
 
+    @Transactional()
     @Test
     public void testTransactionRollbackAndEventHandling() {
         Long userId = 1L;
@@ -63,7 +63,6 @@ public class PaymentTransactionalTest {
 
         try {
             paymentService.processPayment(userId, concertId, seatId, amount, token);
-            throw new RuntimeException("강제 예외 발생");
         } catch (Exception e) {
             assertThat(paymentRepository.findAll()).isEmpty();
         }

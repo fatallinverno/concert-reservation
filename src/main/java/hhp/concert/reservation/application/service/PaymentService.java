@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -85,7 +86,9 @@ public class PaymentService {
 
         // 결제 완료 이벤트 발행 및 히스토리 저장
         try {
+            System.out.println("비즈니스 로직 리스너 스레드 : " + Thread.currentThread().getName());
             eventPublisher.publishEvent(new PaymentCompletedEvent(payment.getPaymentId()));
+            System.out.println("이벤트 퍼블리셔 컴플리트");
         } catch (Exception e) {
             throw new RuntimeException("히스토리 저장에 실패하여 결제 프로세스를 중단합니다.", e);
         }
@@ -93,11 +96,11 @@ public class PaymentService {
         tokenService.completeToken(Long.valueOf(token));
         releaseTemporaryReservation(userId, concertId, seatId);
 
-        return payment;
+        return null;
     }
 
     @Async
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public CompletableFuture<PaymentEntity> paymentHistoryAdd(UserEntity user, Long concertId, SeatEntity seat, int amount) {
         ConcertEntity concert = concertRepository.findById(concertId)
                 .orElseThrow(() -> new RuntimeException("콘서트를 찾을 수 없습니다."));
