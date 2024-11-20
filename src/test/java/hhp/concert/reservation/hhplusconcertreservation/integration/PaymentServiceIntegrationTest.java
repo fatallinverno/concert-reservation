@@ -1,8 +1,14 @@
 package hhp.concert.reservation.hhplusconcertreservation.integration;
 
 import hhp.concert.reservation.application.service.PaymentService;
-import hhp.concert.reservation.domain.entity.*;
-import hhp.concert.reservation.infrastructure.repository.*;
+import hhp.concert.reservation.domain.entity.ConcertEntity;
+import hhp.concert.reservation.domain.entity.PaymentEntity;
+import hhp.concert.reservation.domain.entity.SeatEntity;
+import hhp.concert.reservation.domain.entity.UserEntity;
+import hhp.concert.reservation.infrastructure.repository.ConcertRepository;
+import hhp.concert.reservation.infrastructure.repository.PaymentRepository;
+import hhp.concert.reservation.infrastructure.repository.SeatRepository;
+import hhp.concert.reservation.infrastructure.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

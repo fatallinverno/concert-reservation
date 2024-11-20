@@ -51,7 +51,7 @@ public class IndexPerformanceTest {
             seatRepository.saveAll(seatEntities);
         }
 
-        System.out.println("10만 건의 더미 데이터가 성공적으로 삽입되었습니다.");
+        System.out.println("1만 건의 더미 데이터가 성공적으로 삽입되었습니다.");
 
         long startTime = System.currentTimeMillis();
 
