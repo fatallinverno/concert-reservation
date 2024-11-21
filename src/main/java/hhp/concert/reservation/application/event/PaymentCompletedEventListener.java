@@ -24,6 +24,8 @@ public class PaymentCompletedEventListener {
     @Autowired
     private OutboxRepository outboxRepository;
 
+    private Runnable eventHandledCallback;
+
 //    @Async // 즉각성이 필요 없을때?
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePaymentCompletedEvent(PaymentCompletedEvent event) {
@@ -33,9 +35,18 @@ public class PaymentCompletedEventListener {
         try {
             savePaymentHistory(event);
             saveToOutbox(event);
+
+            if (eventHandledCallback != null) {
+                eventHandledCallback.run();
+            }
+
         } catch (Exception e) {
             System.out.println("결제 내역 저장 중 오류 발생 : " + e.getMessage());
         }
+    }
+
+    public void setEventHandledCallback(Runnable callback) {
+        this.eventHandledCallback = callback;
     }
 
     private void savePaymentHistory(PaymentCompletedEvent event) {
