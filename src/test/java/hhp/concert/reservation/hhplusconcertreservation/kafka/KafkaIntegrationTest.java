@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class KafkaIntegrationTest {
 
-    private static final String TOPIC = "test-topic";
+    private static final String TOPIC = "topic-krtest";
     private static String kafkaBootstrapServers;
 
     @Autowired
@@ -31,7 +31,7 @@ public class KafkaIntegrationTest {
     private String receivedMessage;
 
     // KafkaListener로 메시지 수신
-    @KafkaListener(topics = TOPIC, groupId = "foo")
+    @KafkaListener(topics = TOPIC, groupId = "leekr")
     public void listen(String message) {
         receivedMessage = message;
         latch.countDown();
@@ -53,7 +53,7 @@ public class KafkaIntegrationTest {
         kafkaTemplate = new KafkaTemplate<>(producerFactory);
 
         // Kafka에 메시지 전송
-        String testMessage = "Hello, Kafka!";
+        String testMessage = "Kafka Message Test";
         kafkaTemplate.send(TOPIC, testMessage);
 
         // 컨슈머가 메시지를 받을 때까지 대기
