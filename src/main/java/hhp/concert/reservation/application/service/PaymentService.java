@@ -74,20 +74,10 @@ public class PaymentService {
         seat.setAvailable(false);
         seatRepository.save(seat);
 
-        // 비동기적으로 결제 엔터티 생성 및 저장
-        CompletableFuture<PaymentEntity> paymentFuture = paymentHistoryAdd(user, concertId, seat, amount);
-
-        PaymentEntity payment;
-        try {
-            payment = paymentFuture.get(); // 비동기 결과를 동기적으로 기다림
-        } catch (Exception e) {
-            throw new RuntimeException("결제 저장 중 오류 발생", e);
-        }
-
         // 결제 완료 이벤트 발행 및 히스토리 저장
         try {
             System.out.println("비즈니스 로직 리스너 스레드 : " + Thread.currentThread().getName());
-            eventPublisher.publishEvent(new PaymentCompletedEvent(payment.getPaymentId()));
+            eventPublisher.publishEvent(new PaymentCompletedEvent(null, user, concertId, seat, amount));
             System.out.println("이벤트 퍼블리셔 컴플리트");
         } catch (Exception e) {
             throw new RuntimeException("히스토리 저장에 실패하여 결제 프로세스를 중단합니다.", e);

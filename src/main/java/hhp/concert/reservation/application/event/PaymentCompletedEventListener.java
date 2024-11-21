@@ -1,53 +1,79 @@
 package hhp.concert.reservation.application.event;
 
-import hhp.concert.reservation.domain.entity.PaymentEntity;
+import hhp.concert.reservation.domain.entity.*;
+import hhp.concert.reservation.infrastructure.repository.ConcertRepository;
+import hhp.concert.reservation.infrastructure.repository.OutboxRepository;
 import hhp.concert.reservation.infrastructure.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.time.LocalDateTime;
+
 @Component
 public class PaymentCompletedEventListener {
 
-    private Runnable eventHandledCallback;
+    @Autowired
+    private ConcertRepository concertRepository;
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @Autowired
+    private OutboxRepository outboxRepository;
 
 //    @Async // 즉각성이 필요 없을때?
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePaymentCompletedEvent(PaymentCompletedEvent event) {
         System.out.println("동기 이벤트 수신: Payment ID = " + event.getPaymentId());
-
         System.out.println("리스너 스레드 : " + Thread.currentThread().getName());
 
-        Long paymentId = event.getPaymentId();
-        PaymentEntity payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("결제 내역을 찾을 수 없습니다."));
-
-        processPaymentHistory(payment);
-
-        // 이벤트 핸들링 완료 시 콜백 실행
-        if (eventHandledCallback != null) {
-            eventHandledCallback.run();
+        try {
+            savePaymentHistory(event);
+            saveToOutbox(event);
+        } catch (Exception e) {
+            System.out.println("결제 내역 저장 중 오류 발생 : " + e.getMessage());
         }
     }
 
-    public void setEventHandledCallback(Runnable callback) {
-        this.eventHandledCallback = callback;
+    private void savePaymentHistory(PaymentCompletedEvent event) {
+        UserEntity user = event.getUserEntity();
+        Long concertId = event.getConcertId();
+        SeatEntity seat = event.getSeatEntity();
+        int amount = event.getAmount();
+
+        ConcertEntity concert = concertRepository.findById(concertId)
+                .orElseThrow(() -> new RuntimeException("콘서트를 찾을 수 없습니다."));
+
+        PaymentEntity payment = new PaymentEntity();
+        payment.setUserEntity(user);
+        payment.setConcertEntity(concert);
+        payment.setSeat(seat);
+        payment.setAmount(amount);
+        payment.setPaymentTime(LocalDateTime.now());
+        payment.setPaymentStatus(PaymentEntity.PaymentStatus.COMPLETED);
+
+        paymentRepository.save(payment);
+        System.out.println("결제 기록이 저장되었습니다: Payment ID = " + payment.getPaymentId());
     }
 
-    private void processPaymentHistory(PaymentEntity payment) {
-        // 결제 내역을 기록
-        System.out.println("결제 완료 처리:");
-        System.out.println("결제 ID: " + payment.getPaymentId());
-        System.out.println("사용자 ID: " + payment.getUserEntity().getUserId());
-        System.out.println("콘서트 ID: " + payment.getConcertEntity().getConcertId());
-        System.out.println("좌석 ID: " + payment.getSeat().getSeatId());
-        System.out.println("결제 금액: " + payment.getAmount());
-        System.out.println("결제 시간: " + payment.getPaymentTime());
-        System.out.println("결제 상태: " + payment.getPaymentStatus().name());
+    private void saveToOutbox(PaymentCompletedEvent event) {
+        OutboxEntity outbox = new OutboxEntity();
+        outbox.setAggregateType("Payment");
+        outbox.setAggregateId(event.getPaymentId());
+        outbox.setType("PaymentCompleted");
+        outbox.setPayload(String.format(
+                "예약이 완료되었습니다. 사용자: %s, 콘서트: %s, 좌석: %s, 결제 금액: %d",
+                event.getUserEntity().getUserName(),
+                event.getConcertId(),
+                event.getSeatEntity().getSeatNumber(),
+                event.getAmount()
+        ));
+        outbox.setStatus("PENDING");
+        outboxRepository.save(outbox);
+        System.out.println("Outbox에 메시지가 저장되었습니다.");
     }
 
 }
